@@ -1,0 +1,22 @@
+# Build image for NXEngine-evo on Switch 2 (ounce-devkit).
+#
+# ounce-devkit already provides the cross toolchain (devkitA64 + libounce +
+# switch2 portlibs) and the Switch 1 portlibs (SDL2, SDL2_mixer, ...). What it
+# lacks are the host development files needed to build the `extract` helper,
+# which is a plain PC program, plus the tools used to fetch the game data.
+FROM ounce-devkit
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        pkg-config \
+        libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
+        libpng-dev libjpeg-dev \
+        ca-certificates curl wget unzip file \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV DEVKITPRO=/opt/devkitpro
+
+WORKDIR /work

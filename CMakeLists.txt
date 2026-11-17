@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 set(PLATFORM "pc" CACHE STRING "Platform to build for")
-set_property(CACHE PLATFORM PROPERTY STRINGS pc vita switch)
+set_property(CACHE PLATFORM PROPERTY STRINGS pc vita switch switch2)
 
 set(UNIX_LIKE OFF)
 IF(UNIX AND NOT APPLE AND NOT ANDROID)
@@ -34,6 +34,19 @@ ELSEIF(PLATFORM STREQUAL "switch")
     ELSE()
         message(FATAL_ERROR "Please define DEVKITPRO to point to your SDK path!")
     ENDIF()
+ELSEIF(PLATFORM STREQUAL "switch2")
+    # The Switch 2 toolchain (libounce's Switch2.cmake) must be supplied by
+    # -DCMAKE_TOOLCHAIN_FILE; it brings the platform module, the portlibs and
+    # nx_create_nro() with it, so there is no in-tree toolchain file here.
+    IF(NOT DEFINED ENV{DEVKITPRO})
+        message(FATAL_ERROR "Please define DEVKITPRO to point to your SDK path!")
+    ENDIF()
+    IF(NOT CMAKE_TOOLCHAIN_FILE MATCHES "libounce/cmake/Switch2\\.cmake")
+        message(FATAL_ERROR
+            "PLATFORM=switch2 needs the libounce toolchain. Configure with:\n"
+            "  cmake -DPLATFORM=switch2 -DCMAKE_TOOLCHAIN_FILE=$ENV{DEVKITPRO}/libounce/cmake/Switch2.cmake ..")
+    ENDIF()
+    set(LOW_END_HARDWARE ON)
 
 ELSE()
     message(FATAL_ERROR "Wrong platform")
@@ -196,6 +209,32 @@ ELSEIF(PLATFORM STREQUAL "switch")
       COMMENT "Moving nro to release"
     )
     add_custom_target(nxbinnro_ ALL DEPENDS ${CMAKE_SOURCE_DIR}/release/NXEngine-Evo-${nx_VERSION_MAJOR}.${nx_VERSION_MINOR}.${nx_VERSION_RELEASE}.nro)
+
+ELSEIF(PLATFORM STREQUAL "switch2")
+    add_definitions("-std=gnu++11")
+    add_definitions("-D__SWITCH__")
+    # EGL and the GL stack come from OunceVK in portlibs/switch2; the Switch 1
+    # only bits (glapi, drm_nouveau) are deliberately not linked.
+    target_link_libraries(nx SDL2_mixer SDL2_image SDL2 png jpeg webp
+      m
+      z
+      FLAC
+      vorbisidec
+      ogg
+      mikmod
+      mpg123
+      modplug
+      EGL
+      -lnx
+      opusfile
+      opus
+    )
+
+    nx_create_nro(nx
+      OUTPUT ${CMAKE_SOURCE_DIR}/release/NXEngine-Evo-${nx_VERSION_MAJOR}.${nx_VERSION_MINOR}.${nx_VERSION_RELEASE}.nro
+      ICON "${CMAKE_SOURCE_DIR}/platform/switch/icon.jpg"
+      ROMFS "${CMAKE_SOURCE_DIR}/release"
+    )
 ENDIF()
 
 IF(PLATFORM STREQUAL "pc")
