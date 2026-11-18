@@ -230,9 +230,18 @@ ELSEIF(PLATFORM STREQUAL "switch2")
       opus
     )
 
+    # hbmenu title, author and version
+    nx_generate_nacp(
+      OUTPUT ${CMAKE_BINARY_DIR}/nx.nacp
+      NAME "Ounce-NXEngine-Evo"
+      AUTHOR "Yavia"
+      VERSION "${nx_VERSION_MAJOR}.${nx_VERSION_MINOR}.${nx_VERSION_RELEASE}"
+    )
+
     nx_create_nro(nx
       OUTPUT ${CMAKE_SOURCE_DIR}/release/NXEngine-Evo-${nx_VERSION_MAJOR}.${nx_VERSION_MINOR}.${nx_VERSION_RELEASE}.nro
       ICON "${CMAKE_SOURCE_DIR}/platform/switch/icon.jpg"
+      NACP ${CMAKE_BINARY_DIR}/nx.nacp
       ROMFS "${CMAKE_SOURCE_DIR}/release"
     )
 ENDIF()
