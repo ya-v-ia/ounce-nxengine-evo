@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -22,6 +23,23 @@
 #include "settings.h"
 
 #include <json.hpp>
+
+std::string ResourceManager::_exeDir;
+
+void ResourceManager::setExecutablePath(const char *argv0)
+{
+  _exeDir.clear();
+  if (!argv0 || !*argv0)
+    return;
+
+  std::string p(argv0);
+  std::replace(p.begin(), p.end(), '\\', '/');
+  size_t slash = p.find_last_of('/');
+  if (slash == std::string::npos)
+    return;
+
+  _exeDir = p.substr(0, slash + 1); // e.g. "sdmc:/switch/nxengine/"
+}
 
 bool ResourceManager::fileExists(const std::string &filename)
 {
@@ -73,7 +91,11 @@ std::string ResourceManager::getBasePath()
 std::string ResourceManager::getUserPrefPath()
 {
 #if defined(__SWITCH__)
-  return std::string("/switch/nxengine/");
+  // Relative to the .nro. Falls back only if argv[0] was unavailable
+  // (e.g. launched without hbmenu's argv).
+  if (!_exeDir.empty())
+    return _exeDir;
+  return std::string("sdmc:/switch/nxengine/");
 #else
   char *path = SDL_GetPrefPath(NULL, "nxengine");
   if (NULL != path)
