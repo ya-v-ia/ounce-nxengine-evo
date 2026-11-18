@@ -23,6 +23,12 @@ public:
   static bool fileExists(const std::string &filename);
 
   /**
+   * Records argv[0] so user paths can be resolved relative to the executable (Switch).
+   * Must be called before the first getInstance().
+   */
+  static void setExecutablePath(const char *argv0);
+
+  /**
    * Returns the base path to binary
    */
   std::string getBasePath();
@@ -52,6 +58,7 @@ protected:
   ~ResourceManager();
   ResourceManager(const ResourceManager &) = delete;
   ResourceManager &operator=(const ResourceManager &) = delete;
+  static std::string _exeDir;
   std::string _language;
   void findLanguages();
   std::vector<std::string> _languages;

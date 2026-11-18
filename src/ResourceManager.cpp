@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -22,6 +23,30 @@
 #include "settings.h"
 
 #include <json.hpp>
+
+std::string ResourceManager::_exeDir;
+
+void ResourceManager::setExecutablePath(const char *argv0)
+{
+  _exeDir.clear();
+  if (!argv0 || !*argv0)
+    return;
+
+  std::string p(argv0);
+  std::replace(p.begin(), p.end(), '\\', '/');
+  size_t slash = p.find_last_of('/');
+  if (slash == std::string::npos)
+    return;
+
+  // user data goes in a subfolder next to the .nro
+  _exeDir = p.substr(0, slash + 1) + "ounce-nxengine-evo/";
+
+#if defined(__SWITCH__)
+  // the folder won't exist on first run, and the logger needs it immediately
+  std::string dir = _exeDir.substr(0, _exeDir.size() - 1); // no trailing '/'
+  mkdir(dir.c_str(), 0777);
+#endif
+}
 
 bool ResourceManager::fileExists(const std::string &filename)
 {
@@ -73,7 +98,11 @@ std::string ResourceManager::getBasePath()
 std::string ResourceManager::getUserPrefPath()
 {
 #if defined(__SWITCH__)
-  return std::string("/switch/nxengine/");
+  // Relative to the .nro. Falls back only if argv[0] was unavailable
+  // (e.g. launched without hbmenu's argv).
+  if (!_exeDir.empty())
+    return _exeDir;
+  return std::string("sdmc:/switch/nxengine/");
 #else
   char *path = SDL_GetPrefPath(NULL, "nxengine");
   if (NULL != path)
