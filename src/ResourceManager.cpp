@@ -39,7 +39,7 @@ void ResourceManager::setExecutablePath(const char *argv0)
     return;
 
   // user data goes in a subfolder next to the .nro
-  _exeDir = p.substr(0, slash + 1) + "ounce-nxengine-evo/";
+  _exeDir = p.substr(0, slash + 1) + "userdata/";
 
 #if defined(__SWITCH__)
   // the folder won't exist on first run, and the logger needs it immediately
