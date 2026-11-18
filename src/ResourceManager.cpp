@@ -38,7 +38,14 @@ void ResourceManager::setExecutablePath(const char *argv0)
   if (slash == std::string::npos)
     return;
 
-  _exeDir = p.substr(0, slash + 1); // e.g. "sdmc:/switch/nxengine/"
+  // user data goes in a subfolder next to the .nro
+  _exeDir = p.substr(0, slash + 1) + "ounce-nxengine-evo/";
+
+#if defined(__SWITCH__)
+  // the folder won't exist on first run, and the logger needs it immediately
+  std::string dir = _exeDir.substr(0, _exeDir.size() - 1); // no trailing '/'
+  mkdir(dir.c_str(), 0777);
+#endif
 }
 
 bool ResourceManager::fileExists(const std::string &filename)
